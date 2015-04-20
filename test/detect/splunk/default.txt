@@ -1,0 +1,23 @@
+index=index1 OR index=index2 OR index = index3 1234 OR 12345 OR 123456
+| fields
+ORDERDATE,ORDERDATE,ORDERCREATEDATE,MERCHLINETOT,MERCHLINETOT,MERCHLINETOT,index
+| eval fldNow=now() 
+| eval ORDERCREATEDATE1=substr(ORDERCREATEDATE,7,10) 
+| eval age=((ORDERCREATEDATE1-fldNow)/60)/60/24
+| eval orderlinedate1=strptime(substr(ORDERDATE,1,8), "%Y%m%d") 
+| eval age1=((orderlinedate1-fldNow)/60)/60/24
+| eval orderlinedate2=strptime(substr(ORDERDATE,1,8), "%Y%m%d") 
+| eval age2=((orderlinedate2-fldNow)/60)/60/24
+| where (age <0 OR age1 <0 OR age2 <0 )
+| eval age_group=case(age>-8 AND age<0,"Less than 7 days late",age>-15 AND
+age<-7," 7 and 14 days late",age>-22 AND age<-14,"between 14 and 21 days
+late",age<-21 ,"more than 21 days late")
+| eval age_group1=case(age1>-8 AND age1<0,"Less than 7 days late",age1>-15 AND
+age1<-7," 7 and 14 days late",age1>-22 AND age1<-14," between 14 and 21 days
+late",age1<-21 ,"more than 21 days late")
+| eval age_group2=case(age2>-8 AND age2<0,"Less than 7 days late",age2>-15 AND
+age2<-7,"7 and 14 days late",age2>-22 AND age2<-14," between 14 and 21 days
+late",age2<-21 ,"more than 21 days late")
+| eval grouped_fields=coalesce(MERCHLINETOT,MERCHLINETOT,MERCHLINETOT)
+| chart sum(MERCHLINETOT) over age_group2 by index 
+| rename index1 as "StaleA", index2 as "StaleB", index3 as "StaleC"
